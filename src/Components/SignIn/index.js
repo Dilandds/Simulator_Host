@@ -48,7 +48,7 @@ function SignIn() {
     /*global google*/
     google.accounts.id.initialize({
       client_id:
-        "305839887405-kho6bmbpfcr24d2jtpksfirb79a8v78v.apps.googleusercontent.com",
+        "589785970746-lmeu2pjqa2f2lcp64hn0pfd09eam4p2d.apps.googleusercontent.com",
       callback: handleCallbackResponse,
     });
     google.accounts.id.renderButton(document.getElementById("signInDiv"), {

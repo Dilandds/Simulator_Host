@@ -1,86 +1,87 @@
-import React, { useEffect,useState, Fragment } from 'react'
-import jwt_decode from 'jwt-decode';
+import React, { useEffect, useState, Fragment } from "react";
+import jwt_decode from "jwt-decode";
 import background from "../../Images/dental_pg.png";
-import { Button } from 'react-bootstrap';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import './style.css'
-import { useSelector,useDispatch} from "react-redux";
-import { UserActions } from '../../Actions/User/UserActions';
-import Swl from 'sweetalert2';
-import CaseSelect from '../UI/CaseSelect' 
-import { TimeActions } from '../../Actions/Time/TimeActions';
+import { Button } from "react-bootstrap";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "./style.css";
+import { useSelector, useDispatch } from "react-redux";
+import { UserActions } from "../../Actions/User/UserActions";
+import Swl from "sweetalert2";
+import CaseSelect from "../UI/CaseSelect";
+import { TimeActions } from "../../Actions/Time/TimeActions";
 
-function SignIn(){
-    const [user,setUser]= useState({});
-    const {isSignIn} =useSelector((state) => state.user)
-    const dispatch = useDispatch()
+function SignIn() {
+  const [user, setUser] = useState({});
+  const { isSignIn } = useSelector((state) => state.user);
+  const dispatch = useDispatch();
 
-    function handleCallbackResponse(response){
-        console.log("Encoded JWT Id token" + response.credential);
-        var userObject = jwt_decode(response.credential);
-        console.log(userObject.email.length)
-        var text =userObject.email
-        if(text.match("pdn.ac.lk")){
-            setUser(userObject)
-            dispatch(UserActions.getCurrentUserDetails(userObject))
-            dispatch(TimeActions.setStartTime())
-          
-        }
-        else{
-           showAlert();
-        }
+  function handleCallbackResponse(response) {
+    console.log("Encoded JWT Id token" + response.credential);
+    var userObject = jwt_decode(response.credential);
+    console.log(userObject.email.length);
+    var text = userObject.email;
+    if (text.match("pdn.ac.lk")) {
+      setUser(userObject);
+      dispatch(UserActions.getCurrentUserDetails(userObject));
+      dispatch(TimeActions.setStartTime());
+    } else {
+      showAlert();
     }
+  }
 
-    function showAlert (){
-        Swl.fire({
-            title: "Login Failed",
-            text: "Use your Dental student account to login",
-            icon: "fail",
-            confirmButtonText: "OK",
-          });
-    }
+  function showAlert() {
+    Swl.fire({
+      title: "Login Failed",
+      text: "Use your Dental student account to login",
+      icon: "fail",
+      confirmButtonText: "OK",
+    });
+  }
 
-    function handleSignout(event){
-        setUser({})
-        document.getElementById("signInDiv").hidden=false
-    }
+  function handleSignout(event) {
+    setUser({});
+    document.getElementById("signInDiv").hidden = false;
+  }
 
-    useEffect(()=>{
-        /*global google*/
-        google.accounts.id.initialize({
-            client_id: "305839887405-kho6bmbpfcr24d2jtpksfirb79a8v78v.apps.googleusercontent.com",
-            callback:handleCallbackResponse
-    })
-        google.accounts.id.renderButton(
-            document.getElementById("signInDiv"),
-            {theme:'outline' , size: 'extra-larger' }
-        )
-        google.accounts.id.prompt();
-    } ,[]);
+  useEffect(() => {
+    /*global google*/
+    google.accounts.id.initialize({
+      client_id:
+        "589785970746-lmeu2pjqa2f2lcp64hn0pfd09eam4p2d.apps.googleusercontent.com",
+      callback: handleCallbackResponse,
+    });
+    google.accounts.id.renderButton(document.getElementById("signInDiv"), {
+      theme: "outline",
+      size: "extra-larger",
+    });
+    google.accounts.id.prompt();
+  }, []);
 
-    if(Object.keys(user).length==0 || !isSignIn){
-    return(
-        <div className ="backd"   xs={8} md={12}>
-            <div xs={4} md={12} className='topic1'>
-                    Virtual Patient Simulator <br/></div>
-            <div xs={4} md={12} className='topic2'>
-                    for Skill Training in </div>
-            <div xs={3} md={12} className='topic3'>
-                    Dentistry</div>
-            <div className='authent'>
-                <Button className= "relative" id="signInDiv" variant="light"></Button>
-                 <p id="errorM"></p>
-            </div>
+  if (Object.keys(user).length == 0 || !isSignIn) {
+    return (
+      <div className="backd" xs={8} md={12}>
+        <div xs={4} md={12} className="topic1">
+          Virtual Patient Simulator <br />
         </div>
-    )
-            }
-            else{
-             return(
-                <div>
-              <CaseSelect/> 
-                </div>
-             )   
-            }
+        <div xs={4} md={12} className="topic2">
+          for Skill Training in{" "}
+        </div>
+        <div xs={3} md={12} className="topic3">
+          Dentistry
+        </div>
+        <div className="authent">
+          <Button className="relative" id="signInDiv" variant="light"></Button>
+          <p id="errorM"></p>
+        </div>
+      </div>
+    );
+  } else {
+    return (
+      <div>
+        <CaseSelect />
+      </div>
+    );
+  }
 }
 
 export default SignIn;
