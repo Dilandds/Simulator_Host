@@ -25,7 +25,7 @@ const Test = () => {
       new Blob([await fetch("./1.png").then((r) => r.blob())], {
         type: "image/png",
       }),
-      "1.png"
+      "https://dilanddsfinalyr2023.web.app/1.png"
     );
 
     try {

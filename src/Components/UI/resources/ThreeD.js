@@ -1,12 +1,14 @@
-import React , { useCallback } from "react";
+import React, { useCallback } from "react";
 import { Unity, useUnityContext } from "react-unity-webgl";
 
-function ThreeD({ onUnityData, onSendMessageToUnity,}) {
+function ThreeD({ onUnityData, onSendMessageToUnity }) {
   const { unityProvider, loadingProgression, isLoaded } = useUnityContext({
-    loaderUrl: "/assets/Build/webgl.loader.js",
-    dataUrl: "/assets/Build/webgl.data",
-    frameworkUrl: "/assets/Build/webgl.framework.js",
-    codeUrl: "/assets/Build/webgl.wasm",
+    loaderUrl:
+      "https://dilanddsfinalyr2023.web.app/assets/Build/webgl.loader.js",
+    dataUrl: "https://dilanddsfinalyr2023.web.app/assets/Build/webgl.data",
+    frameworkUrl:
+      "https://dilanddsfinalyr2023.web.app/assets/Build/webgl.framework.js",
+    codeUrl: "https://dilanddsfinalyr2023.web.app/assets/Build/webgl.wasm",
   });
 
   // Function to be called from Unity
@@ -15,15 +17,18 @@ function ThreeD({ onUnityData, onSendMessageToUnity,}) {
   };
 
   // Define sendMessageToUnity using useCallback
-  const sendMessageToUnity = useCallback((message) => {
-    if (unityProvider && unityProvider.current) {
-      unityProvider.current.sendMessage(
-        "MessageHandler", // Updated GameObject name
-        "TriggerToolSceneToggle", // Updated method name
-        message
-      );
-    }
-  }, [unityProvider]);
+  const sendMessageToUnity = useCallback(
+    (message) => {
+      if (unityProvider && unityProvider.current) {
+        unityProvider.current.sendMessage(
+          "MessageHandler", // Updated GameObject name
+          "TriggerToolSceneToggle", // Updated method name
+          message
+        );
+      }
+    },
+    [unityProvider]
+  );
   // Pass the sendMessageToUnity function to the parent component
   React.useEffect(() => {
     console.log(isLoaded);
