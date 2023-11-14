@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import background from "../../Images/DentistryBackgound.jpg";
-import React, { useEffect, useState, Fragment } from "react";
+import React, { useContext, useEffect, useState, Fragment } from "react";
 import { useSelector } from "react-redux";
 import "./Case.css";
 import Card from "@mui/material/Card";
@@ -41,6 +41,7 @@ import { TimeActions } from "../../Actions/Time/TimeActions";
 import { List, ListItem } from "@mui/material";
 import Typed from "react-typed";
 import ThreeD from "./resources/ThreeD";
+import { CaseDataContext } from '../../CaseDataContext'
 
 import imagedoc from "../../Images/doc.gif";
 import imagepet from "../../Images/pat.gif";
@@ -59,7 +60,7 @@ const questions = {
     {
       q: "Can you point to the tooth which is painful?",
       correctness: true,
-      a: "",
+      a: "Here it is",
       image:
         "https://firebasestorage.googleapis.com/v0/b/vitual-patient.appspot.com/o/Cases%2FC001%2FpointToothC001.jfif?alt=media&token=c2071e16-4945-4106-841c-34f5fe72265c",
       cat: "complaint",
@@ -95,7 +96,7 @@ const questions = {
       correctness: false,
       q: "Have you got any restorations done on that tooth?",
       image: "",
-      a: "",
+      a: "No",
     },
     {
       correctness: true,
@@ -116,7 +117,7 @@ const questions = {
     {
       correctness: false,
       image: "",
-      a: "",
+      a: "Don't know",
       id: "40",
       q: "Is it on a molar tooth?",
       cat: "complaint",
@@ -132,7 +133,7 @@ const questions = {
     {
       q: "Can you point to the tooth which is painful?",
       correctness: true,
-      a: "",
+      a: "This is it",
       image:
         "https://firebasestorage.googleapis.com/v0/b/vitual-patient.appspot.com/o/Cases%2FC001%2FpointToothC001.jfif?alt=media&token=c2071e16-4945-4106-841c-34f5fe72265c",
       cat: "complaint",
@@ -318,6 +319,7 @@ const questions = {
 };
 
 function CaseDesc() {
+  const { setCaseData } = useContext(CaseDataContext);
   const [selectedQId, setSelectedQId] = useState([]);
   const { userInfomation } = useSelector((state) => state.user);
   const { sectionOrder } = useSelector((state) => state.historyQ);
@@ -413,6 +415,8 @@ function CaseDesc() {
     setTimeout(() => {
       navigate("/page4");
     }, 500); // 500ms delay
+
+    setCaseData(previousData => ({ ...previousData, totalMarks }));
   };
 
   const handleClick1 = () => {

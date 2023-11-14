@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useContext, useState, useEffect, useRef } from "react";
 import CheckBoxQuestion from "./CheckBoxQuestion";
 import RadioImageQuestion from "./RadioImageQuestion";
 import imgplaqueChart from "./images/imgplaquechart.jpeg";
@@ -12,13 +12,13 @@ import img3 from "../../../../Images/200.png";
 import img4 from "../../../../Images/80.png";
 import { useNavigate } from "react-router-dom";
 import Test from "../../../Drawing/Test";
-
+import { CaseDataContext } from '../../../../CaseDataContext'; 
 import DentalChart from "../../../Dental Charts/DentalChart";
 
 // Define correct answers for each step
 const CORRECT_ANSWERS = {
   0: ["Mouth Mirror", "CPI probe"],
-  1: "Basic Periodontal Examination", // or "BPE"
+  1: "20-25g", // or "BPE"
   2: ["A colour band from 3.5mm to 5.5mm", "Ball ended tip"],
   3: "Diagram2", // Assuming the value for the second diagram is 'Diagram2'
   5: ["Mouth Mirror", "Periodontal probe"],
@@ -33,7 +33,7 @@ const CORRECT_ANSWERS = {
 const CASE1_QUESTIONS = {
   // Example structure, adjust based on your actual questions
   0: "Select the instruments needed to carry out the periodontal screening",
-  1: "What is the name of this procedure?",
+  1: "According to the guidelines, what is the force that should be applied on the instrument during BPE?",
   2: "Select the features of the instrument used for the periodontal screening.",
   3: "Select the diagram which denotes code 3",
   5: "Select the instruments needed to carry out the hard tissue assessment",
@@ -47,8 +47,10 @@ const CASE1_QUESTIONS = {
 };
 
 const BlackBoxWithButton = ({ unityData, sendMessageToUnity }) => {
+  const { caseData } = useContext(CaseDataContext);
+  const totalMarks = caseData.totalMarks;
   const [buttonText, setButtonText] = useState("Submit");
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(-1);
   const procedureNameInputRef = useRef(null);
   const [procedureName, setProcedureName] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -57,6 +59,21 @@ const BlackBoxWithButton = ({ unityData, sendMessageToUnity }) => {
   const [selectedPrognosis, setSelectedPrognosis] = useState(""); // Initial value can be an empty string or a default value
   const [selectedTooth, setSelectedTooth] = useState("");
   const [firstAttemptAnswers, setFirstAttemptAnswers] = useState({});
+  const [marks, setMarks] = useState({ mark1: null, mark2: null });
+  const [instructionsText, setInstructionsText] = useState(
+    `1. Scroll down and find the dental chart.\n` +
+    `2. Click the "Enter Intra Oral View" button.\n` +
+    `3. Press "1" to use the dental mirror tool.\n` +
+    `4. By observing the intra-oral view, mark the dental chart accordingly.\n` +
+    `5. Submit your assessment.`
+  );
+  const [instructionsText2, setInstructionsText2] = useState(
+    `1. Scroll down.\n` +
+    `2. Click the "Enter Intra Oral View" button.\n` +
+    `3. Press "1" to use the dental mirror tool.\n` +
+    `4. By observing the intra-oral view, mark the defect of tooth 25 accordingly.\n` +
+    `5. Submit your assessment.`
+  );
 
   // Inside your component
   const navigate = useNavigate();
@@ -79,12 +96,12 @@ const BlackBoxWithButton = ({ unityData, sendMessageToUnity }) => {
     { src: image4, value: "Diagram4" },
   ];
   const [answers, setAnswers] = useState({
-    Tweezer: false,
-    "Mouth Mirror": false,
-    "Sharp probe": false,
-    "Naber’s probe": false,
-    "Periodontal probe": false,
-    "CPI probe": false,
+    "1. Tweezer": false,
+    "2. Mouth Mirror": false,
+    "3. Sharp probe": false,
+    "4. Naber’s probe": false,
+    "5. Periodontal probe": false,
+    "6. CPI probe": false,
   });
   const [plaqscoreanswers, setplaqscoreAnswers] = useState({
     "54%": false,
@@ -114,21 +131,37 @@ const BlackBoxWithButton = ({ unityData, sendMessageToUnity }) => {
     "Peri-apical infection": false,
   });
   const [instruction, setInstruction] = useState(
-    "Conduct the EXTRA ORAL VIEW EXAMINATION"
+    "EXTRA ORAL VIEW EXAMINATION"
   );
   const [examination, setExamination] = useState("");
 
   const [questionMessage, setQuestionMessage] = useState(
-    "Patient looks fit and healthy"
+    "Since Patient looks fit and healthy , please click Enter INTRA ORAL View button to proceed with the rest of the examination."
   ); // New state to hold the question message
+  // Define the options for the single-choice question
+  const forceOptions = [
+    "45-50g",
+    "35-40g",
+    "20-25g",
+    "15-20g",
+  ];
 
+  // Add a new state for the selected force
+  const [selectedForce, setSelectedForce] = useState("");
+
+  const handleMarks = (mark1, mark2) => {
+    setMarks({ mark1, mark2 });
+    setStep(currentStep => currentStep + 1);
+    // Additional code to test the received data (e.g., logging it to the console)
+    console.log(`Received marks: mark1 = ${mark1}, mark2 = ${mark2}`);
+  };
   // Effect hook to listen for changes in unityData
   useEffect(() => {
     console.log("Unity data received in BlackBoxWithButton:", unityData); // Add this line for debugging
     if (unityData === "MessageFromUnity") {
-      setQuestionMessage("Patient looks fit and healthy");
+
       // setShowQuestion(true);
-      setInstruction("INTRA ORAL VIEW EXAMINATION");
+      setInstruction("INTRA ORAL EXAMINATION");
       setExamination("Periodontal Screening");
       setQuestionMessage(
         "Press The TOOL TRAY VIEW button to see the dental tools"
@@ -136,14 +169,17 @@ const BlackBoxWithButton = ({ unityData, sendMessageToUnity }) => {
     }
     if (unityData === "Tool tray toggled: Active") {
       setShowToolTrayQuestion(true); // Show the question when this message is received
+      setStep(0);
     }
   }, [unityData]);
 
   // Callback function to be passed to DentalChart
   const handleScoreData = (score, totalCorrectAnswers) => {
     setScoreData({ score, totalCorrectAnswers });
+    setStep(currentStep => currentStep + 1);
   };
   // Function to handle checkbox changes
+
 
   const handleCheckboxChange = (option) => {
     console.log(`handleCheckboxChange called with option: ${option}`);
@@ -180,6 +216,9 @@ const BlackBoxWithButton = ({ unityData, sendMessageToUnity }) => {
       });
     }
   };
+  useEffect(() => {
+    console.log("Total Marks: ", totalMarks);
+}, [totalMarks]); 
 
   const renderRadioImageQuestion = () => {
     if (step === 3) {
@@ -335,20 +374,28 @@ const BlackBoxWithButton = ({ unityData, sendMessageToUnity }) => {
   // When the component mounts, add an event listener to the input
 
   // Function to render the question and input field
+  // Modify the renderProcedureNameQuestion function
   const renderProcedureNameQuestion = () => {
     return (
       <div style={{ marginTop: "20px" }}>
-        <label htmlFor="procedureName">
-          What is the name of this procedure?
+        <label htmlFor="forceQuestion">
+          According to the guidelines, what is the force that should be applied on the instrument during BPE?
         </label>
-        <input
-          type="text"
-          id="procedureName"
-          ref={procedureNameInputRef}
-          value={procedureName}
-          onChange={handleProcedureNameChange}
-          style={{ marginLeft: "10px" }}
-        />
+        <div>
+          {forceOptions.map((option, index) => (
+            <div key={index}>
+              <input
+                type="radio"
+                id={`forceOption${index}`}
+                name="forceQuestion"
+                value={option}
+                checked={selectedForce === option}
+                onChange={(e) => setSelectedForce(e.target.value)}
+              />
+              <label htmlFor={`forceOption${index}`}>{option}</label>
+            </div>
+          ))}
+        </div>
       </div>
     );
   };
@@ -466,13 +513,15 @@ const BlackBoxWithButton = ({ unityData, sendMessageToUnity }) => {
 
   const buttonStyle = {
     fontSize: "14px", // Set the font size to make the button smaller
+    width: "300px",
     padding: "10px 20px", // Add padding to make the button look good
-    backgroundColor: isSubmitted ? "green" : "blue", // Change button color after submission
+    backgroundColor: isSubmitted ? "lightgreen" : "dodgerblue", // Change button color after submission
   };
 
   const instructionBoxStyle = {
-    backgroundColor: "black",
-    color: "white",
+    backgroundColor: "snow",
+    border: "1px solid black",
+    color: "black",
     padding: "10px",
     fontSize: "14px",
     width: "300px", // You can adjust this width to suit your content
@@ -495,13 +544,33 @@ const BlackBoxWithButton = ({ unityData, sendMessageToUnity }) => {
     display: "flex",
     flexDirection: "column",
     justifyContent: "start", // Aligns items to the start of the flex container
-    marginRight: "20px", // This creates a gap on the right side. Adjust as needed.
+    marginRight: "300px", // This creates a gap on the right side. Adjust as needed.
   };
+  const messageBoxStyle = {
+    border: '1px solid #ddd', // Light grey border
+    padding: '10px',
+    margin: '10px 0',
+    backgroundColor: '#f9f9f9', // Light background
+    fontSize: '14px',
+    borderRadius: '5px', // Rounded corners
+    width: '300px', // Maximum width
+    wordWrap: 'break-word', // Ensures text wraps to avoid overflow
+  };
+  let messageBoxDynamicStyle = { ...messageBoxStyle };
 
+  if (correctAnswerMessage.includes("Correct")) {
+    messageBoxDynamicStyle.backgroundColor = 'lightgreen';
+  } else if (correctAnswerMessage.includes("Wrong")) {
+    messageBoxDynamicStyle.backgroundColor = 'salmon';
+  } else if (correctAnswerMessage) {
+    messageBoxDynamicStyle.backgroundColor = 'royalblue';
+  }
   // Function to check if the answer is correct
   const isAnswerCorrect = (currentStep) => {
     let userAnswers;
     switch (currentStep) {
+      case 1:
+        return selectedForce === CORRECT_ANSWERS[currentStep];
       case 9:
         userAnswers = plaqscoreanswers;
         return userAnswers[CORRECT_ANSWERS[currentStep]];
@@ -560,7 +629,7 @@ const BlackBoxWithButton = ({ unityData, sendMessageToUnity }) => {
           firstAttemptAnswer = answers;
           break;
         case 1:
-          firstAttemptAnswer = procedureName;
+          firstAttemptAnswer = selectedForce;
           break;
         case 2:
           firstAttemptAnswer = periodontalScreeningOptions;
@@ -616,10 +685,9 @@ const BlackBoxWithButton = ({ unityData, sendMessageToUnity }) => {
         setScores({ ...scores, [step]: (scores[step] || 0) - 5 });
         setTotalScore((prevTotalScore) => prevTotalScore - 5);
         setCorrectAnswerMessage(
-          `Incorrect. The correct answer is: ${
-            Array.isArray(CORRECT_ANSWERS[step])
-              ? CORRECT_ANSWERS[step].join(", ")
-              : CORRECT_ANSWERS[step]
+          `Incorrect. The correct answer is: ${Array.isArray(CORRECT_ANSWERS[step])
+            ? CORRECT_ANSWERS[step].join(", ")
+            : CORRECT_ANSWERS[step]
           }`
         );
         proceedToNextStep();
@@ -630,25 +698,29 @@ const BlackBoxWithButton = ({ unityData, sendMessageToUnity }) => {
     setTimeout(() => {
       setCorrectAnswerMessage("");
     }, 3000);
+    const finalScore = totalScore + (marks.mark1 || 0) + (marks.mark2 || 0);
+    if (scoreData && scoreData.score) {
+      finalScore += scoreData.score;
+    }
+    if (step === 15) {
 
-    if (step >= 15) {
       setButtonText("Finish");
     }
     // Show review page when "Finish" button is clicked
-    if (buttonText === "Finish") {
-      //   setShowReviewPage(true);
-      //handleFinish(); // Call handleFinish when the Finish button is clicked
-
-      navigate("/feedback", {
+    if (step === 15 && buttonText === "Finish") {
+      navigate('/feedback', {
         state: {
-          totalScore,
+          totalScore: finalScore, // Pass the final score
           CORRECT_ANSWERS,
           firstAttemptAnswers,
           showBlackBox: false,
           CASE1_QUESTIONS,
-        },
+          totalMarks
+        }
       });
+      return; // Exit the function to prevent further execution
     }
+
   };
 
   const proceedToNextStep = () => {
@@ -662,10 +734,17 @@ const BlackBoxWithButton = ({ unityData, sendMessageToUnity }) => {
         switch (nextStep) {
           case 4:
             setExamination("Soft Tissue Assessment");
-            setQuestionMessage("Normal in color and texture");
+            setQuestionMessage("It looks normal in color and texture , Optional : You could futher verify it by having a look at the INTRA ORAL View");
+            setButtonText("Next");
             break;
           case 5:
             setExamination("Hard Tissue Assessment");
+            setButtonText("Submit");
+            break;
+
+          case 6:
+            setQuestionMessage("")
+
             break;
           case 10:
             setInstruction("Investigation");
@@ -675,8 +754,12 @@ const BlackBoxWithButton = ({ unityData, sendMessageToUnity }) => {
             setInstruction("Radiographs");
             setExamination("");
             break;
+            case 12:
+              setButtonText("Next");
+              break;
           case 13:
             setInstruction("Sensibility recordings");
+            setButtonText("Submit");
             break;
           default:
             break;
@@ -687,9 +770,6 @@ const BlackBoxWithButton = ({ unityData, sendMessageToUnity }) => {
 
         return nextStep;
       });
-    } else {
-      // Show total score
-      alert(`Simulation complete! Your total score is: ${totalScore}`);
     }
   };
 
@@ -710,7 +790,7 @@ const BlackBoxWithButton = ({ unityData, sendMessageToUnity }) => {
               {renderProcedureNameQuestion()}{" "}
               {/* Call the function to render the input field */}
             </>
-          ) : step === 0 && !showToolTrayQuestion ? (
+          ) : step === (-1 || 0) && !showToolTrayQuestion ? (
             // If step is 0, display the default question message
             <p>{questionMessage}</p>
           ) : showToolTrayQuestion ? (
@@ -719,6 +799,7 @@ const BlackBoxWithButton = ({ unityData, sendMessageToUnity }) => {
           ) : null}
           {step === 2 && (
             // When step is 2, you can add the new components or logic here for future additions
+            
             <div>{renderCheckBoxQuestion()}</div>
           )}
           {step === 3 && <div>{renderRadioImageQuestion()}</div>}
@@ -729,21 +810,60 @@ const BlackBoxWithButton = ({ unityData, sendMessageToUnity }) => {
           )}
           {step === 6 && (
             <div>
+              {/* Render the instructions text */}
+              <div className="instructions">
+                {instructionsText.split('\n').map((line, index) => (
+                  <p key={index}>{line}</p>
+                ))}
+              </div>
+
+              {/* DentalChart component */}
               <DentalChart onScoreSubmit={handleScoreData}></DentalChart>
             </div>
           )}
           {step === 7 && (
             <div>
-              <Test></Test>
+              {/* Render the instructions text */}
+              <div className="instructions">
+                {instructionsText2.split('\n').map((line, index) => (
+                  <p key={index}>{line}</p>
+                ))}
+              </div>
+              <br />
+              <br />
+              <br />
+              <br />
+              <br />
+              <br />
+              <br />
+              <br />
+              <br />
+              <br />
+              <br />
+              <br />
+              <br />
+              <br />
+              <br />
+              <br />
+              <br />
+              <br />
+              <br />
+
+              {/* Container for the Test component */}
+              <div style={{ display: 'flex', justifyContent: 'center', width: '100%', marginLeft: '500px' }}>
+                <Test onSubmit={handleMarks} />
+              </div>
+              <br />
+              <br />
+              <br />
+              <br />
+              <br />
+              <br />
+              <br />
             </div>
+
           )}
-          {/* Possibly render the score data */}
-          {scoreData && (
-            <div>
-              User's Score: {scoreData.score} out of{" "}
-              {scoreData.totalCorrectAnswers}
-            </div>
-          )}
+
           {step === 8 && (
             // When step is 2, you can add the new components or logic here for future additions
             <div>
@@ -839,13 +959,18 @@ const BlackBoxWithButton = ({ unityData, sendMessageToUnity }) => {
           {step === 15 && <div>{renderCheckBoxQuestion()}</div>}
         </div>
       </div>
+      <button style={buttonStyle} onClick={handleButtonClick} disabled={step === -1 || step === 6 ||step === 7}>
+        {buttonText}
+      </button>
 
       <div>
-        {correctAnswerMessage && <p>{correctAnswerMessage}</p>}
-        <button style={buttonStyle} onClick={handleButtonClick}>
-          {buttonText}
-        </button>
+
+        {correctAnswerMessage && <p style={messageBoxDynamicStyle}>{correctAnswerMessage}</p>}
+
       </div>
+
+
+
     </div>
   );
 };
